@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: material-inspection-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/materialMasterServiceDb?createTableIfNotExists=true
+    username: root
+    password: 3306
+  jpa:
+    hibernate:
+      ddl-auto: update
+  output:
+    ansi:
+      enabled: always 
+    
+server:
+  port: 8080
+  
+password-validation: ^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!*()]).{8,}$
