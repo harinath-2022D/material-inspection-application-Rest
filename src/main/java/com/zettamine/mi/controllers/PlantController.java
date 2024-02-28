@@ -18,10 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.zettamine.mi.entities.Plant;
 import com.zettamine.mi.services.PlantService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/plant")
+@Tag(name = "Plant Controller", description = "responsible for adding plant related data")
 public class PlantController {
 	private PlantService plantService;
 

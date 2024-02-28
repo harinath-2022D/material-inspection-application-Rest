@@ -3,9 +3,11 @@ package com.zettamine.mi.requestdtos;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class MaterialCharDto {
 	@Size(min = 5, max = 256, message = "characteristic description should be greater than 5 char and less than 256 char")
 	private String charDesc;

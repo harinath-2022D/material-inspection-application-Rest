@@ -17,16 +17,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.zettamine.mi.entities.Material;
 import com.zettamine.mi.entities.MaterialInspectionCharacteristics;
 import com.zettamine.mi.requestdtos.MaterialCharDto;
 import com.zettamine.mi.services.MaterialService;
+import com.zettamine.mi.utils.ApplicationConstants;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/material")
+@Tag(name = "Material Controller", description = "responsible for adding material related data")
 public class MaterialController {
 
 	private MaterialService materialService;
@@ -52,12 +56,12 @@ public class MaterialController {
 
 			LOG.info("new material succesfully saved");
 			
-			response.put("message", "success");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
 
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
 			LOG.info("new material adding failed due to duplicate id or description");
-			response.put("message", "fail");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.FAIL_MSG);
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
 		}
@@ -73,8 +77,8 @@ public class MaterialController {
 
 		LOG.info("returing all active material list to view");
 		
-		response.put("message", "success");
-		response.put("data", materialsList);
+		response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
+		response.put(ApplicationConstants.DATA, materialsList);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -84,11 +88,11 @@ public class MaterialController {
 		Material material = materialService.getMaterial(id);
 		Map<String, Object> response = new HashMap<>();
 		if (material != null) {
-			response.put("message", "success");
-			response.put("data", material);
+			response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
+			response.put(ApplicationConstants.DATA, material);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
-			response.put("message", "fail");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.resolve(404));
 		}
 	}
@@ -104,10 +108,10 @@ public class MaterialController {
 		if (result) {
 
 			LOG.info("material updation succesfully saved");
-			response.put("message", "success");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-		response.put("message", "fail");
+		response.put(ApplicationConstants.MSG, ApplicationConstants.FAIL_MSG);
 		return new ResponseEntity<>(response, HttpStatus.CONFLICT);
 	}
 	
@@ -117,12 +121,12 @@ public class MaterialController {
 		boolean result = materialService.deleteMaterial(materialId);
 		Map<String, Object> response = new HashMap<>();
 		if (result) {
-			response.put("message", "success");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
 			LOG.info("redirecting to  all material view form");
 
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-		response.put("message", "fail");
+		response.put(ApplicationConstants.MSG, ApplicationConstants.FAIL_MSG);
 		return new ResponseEntity<>(response, HttpStatus.CONFLICT);
 	}
 	
@@ -136,8 +140,8 @@ public class MaterialController {
 		LOG.info("calling material service for material characteristics if material id : {}", materialId);
 		Map<String, Object> response = new HashMap<>();
 		List<MaterialInspectionCharacteristics> list = materialService.getAllCharacteristicsOfMaterial(materialId);
-		response.put("message", "success");
-		response.put("data", list);
+		response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
+		response.put(ApplicationConstants.DATA, list);
 		LOG.info("returning characteristics list of material id, {}", materialId);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -154,27 +158,51 @@ public class MaterialController {
 		Map<String, Object> response = new HashMap<>();
 
 		if (result) {
-			response.put("message", "success");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
 			LOG.info("redirecting to material characteristics form");
 
 			return new ResponseEntity<>(response,HttpStatus.OK);
 		} else {
 			LOG.info("saving failed | redirecting to material characteristics form");
-			response.put("message", "fail");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.FAIL_MSG);
 			return new ResponseEntity<>(response, HttpStatus.CONFLICT);
 		}
 
 	}
 
-	@GetMapping("/char/lot")
-	public ResponseEntity<?> getLotCurrentCharacteristicsOfAssociatedMaterial(@RequestParam("id") String id) {
-
+	@GetMapping("/rem/char/lot")
+	public ResponseEntity<?> getLotCurrentCharacteristicsOfAssociatedMaterial(@RequestParam Integer id) {
+		
 		List<MaterialInspectionCharacteristics> characteristicsList = materialService.getMaterialCharByLotId(id);
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
+		if(characteristicsList.size() == 0) {
+			response.put("info", "all characteristics are inspected");
+		}else {
+			response.put(ApplicationConstants.DATA, characteristicsList);
+		}
+		
+		LOG.info("returing lot inspection characteristics needs to be added");
 
-		LOG.info("returing lot inspection characteristics");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 
-		return new ResponseEntity<>(characteristicsList, HttpStatus.OK);
-
+	}
+	
+	@PostMapping("/char/upload")
+	public ResponseEntity<?> addMaterialCharacteristics(@RequestParam MultipartFile file) throws Exception{
+		
+		Map<String, Object> response = new HashMap<>();
+		
+		boolean isCharacteristicsAdded = materialService.addListOfCharacteristicsForMaterial(file);
+		
+		if(isCharacteristicsAdded) {
+			response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
+		}else {
+			response.put(ApplicationConstants.MSG, ApplicationConstants.FAIL_MSG);
+		}
+		
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 }

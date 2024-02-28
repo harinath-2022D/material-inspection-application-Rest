@@ -16,10 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.zettamine.mi.entities.Vendor;
 import com.zettamine.mi.services.VendorService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/vendor")
+@Tag(name = "Vendor Controller", description = "responsible for adding vendors related data")
 public class VendorController {
 
 	private VendorService vendorService;

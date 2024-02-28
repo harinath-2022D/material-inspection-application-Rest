@@ -22,14 +22,17 @@ import com.zettamine.mi.requestdtos.DateRangeLotSearch;
 import com.zettamine.mi.requestdtos.EditLotDto;
 import com.zettamine.mi.requestdtos.LotActualDto;
 import com.zettamine.mi.requestdtos.LotCreationDto;
-import com.zettamine.mi.responsedtos.DateRangeLotResponse;
-import com.zettamine.mi.responsedtos.LotActualsAndCharacteristics;
+import com.zettamine.mi.responsedtos.DateRangeLotResponseDto;
+import com.zettamine.mi.responsedtos.LotActualsAndCharacteristicsResponseDto;
 import com.zettamine.mi.servicesImpl.InspectionServiceImpl;
+import com.zettamine.mi.utils.ApplicationConstants;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/insp")
+@Tag(name = "InspectionLot Controller", description = "responsible for actuals related data")
 public class InspectionLotController {
 	private InspectionServiceImpl inspectionlotService;
 
@@ -48,13 +51,13 @@ public class InspectionLotController {
 		if (result) {
 
 			LOG.info("lot created successfully");
-			response.put("message", "success");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
 
 			return new ResponseEntity<>(response,HttpStatus.OK);
 		}
 
 		LOG.info("lot creatioin failed");
-		response.put("message", "fail");
+		response.put(ApplicationConstants.MSG, ApplicationConstants.FAIL_MSG);
 		return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
 	}
 
@@ -66,14 +69,14 @@ public class InspectionLotController {
 		InspectionLot inspLot = inspectionlotService.getLotDetails(id);
 		
 		if(inspLot == null) {
-			response.put("message", "resource not found");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.resolve(404));
 		}
 
 		LOG.info("Retunring lot details of id : {}", id);
 		
-		response.put("message", "success");
-		response.put("data", inspLot);
+		response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
+		response.put(ApplicationConstants.DATA, inspLot);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -82,12 +85,12 @@ public class InspectionLotController {
 
 		LOG.info("Finding lot actuals and characteristics of lot id : {}", id);
 		Map<String, Object> response = new HashMap<>();
-		List<LotActualsAndCharacteristics> list = inspectionlotService.getActualAndOriginalOfLot(id);
+		List<LotActualsAndCharacteristicsResponseDto> list = inspectionlotService.getActualAndOriginalOfLot(id);
 
 		LOG.info("Returning list of lot actual and characteristics of lot id : {}", id);
 
-		response.put("message", "success");
-		response.put("data", list);
+		response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
+		response.put(ApplicationConstants.DATA, list);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -98,12 +101,12 @@ public class InspectionLotController {
 		Map<String, Object> resp = new HashMap<>();
 		if (response) {
 			
-			resp.put("message", "success");
+			resp.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
 			LOG.info("new Inspection actual saved for lot id : {}", actuals.getLot());
 
 			return new ResponseEntity<>(resp, HttpStatus.OK);
 		} else {
-			resp.put("message", "fail");
+			resp.put(ApplicationConstants.MSG, ApplicationConstants.FAIL_MSG);
 			LOG.info("Failed saving new inspection actual of lot id : {}", actuals.getLot());
 
 			return new ResponseEntity<>(resp, HttpStatus.BAD_REQUEST);
@@ -116,14 +119,14 @@ public class InspectionLotController {
 		boolean result = inspectionlotService.updateInspectionLot(lot);
 		Map<String, Object> resp = new HashMap<>();
 		if (result) {
-			resp.put("message", "success");
+			resp.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
 			
 			LOG.info("Lot details are updated successfully lot id : {}", lot.getId());
 
 			return new ResponseEntity<>(resp, HttpStatus.OK);
 
 		} else {
-			resp.put("message", "fail");
+			resp.put(ApplicationConstants.MSG, ApplicationConstants.FAIL_MSG);
 			LOG.info("Lot details are updated failed | lot id : {}", lot.getId());
 			return new ResponseEntity<>(resp, HttpStatus.BAD_REQUEST);
 		}
@@ -134,12 +137,12 @@ public class InspectionLotController {
 
 		LOG.info("Searching lots ");
 		Map<String, Object> response = new HashMap<>();
-		List<DateRangeLotResponse> list = inspectionlotService.getAllLotsDetailsBetweenDateRange(obj);
+		List<DateRangeLotResponseDto> list = inspectionlotService.getAllLotsDetailsBetweenDateRange(obj);
 
 		LOG.info("Returning lots having search criteria , size : {}", list.size());
 		
-		response.put("message", "success");
-		response.put("data", list);
+		response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
+		response.put(ApplicationConstants.DATA, list);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -152,8 +155,8 @@ public class InspectionLotController {
 		
 		List<InspectionLot> list = inspectionlotService.getAllInspectionLots();
 		
-		response.put("message", "success");
-		response.put("data", list);
+		response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
+		response.put(ApplicationConstants.DATA, list);
 		
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -163,10 +166,10 @@ public class InspectionLotController {
 		boolean isActuUpdated = inspectionlotService.saveInspActuals(obj);
 		Map<String, Object> response = new HashMap<>();
 		if (isActuUpdated) {
-			response.put("message", "success");
+			response.put(ApplicationConstants.MSG, ApplicationConstants.SUCCESS_MSG);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-		response.put("message", "fail");
+		response.put(ApplicationConstants.MSG, ApplicationConstants.FAIL_MSG);
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
 

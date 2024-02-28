@@ -1,6 +1,7 @@
 package com.zettamine.mi.servicesImpl;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.zettamine.mi.entities.InspectionActuals;
@@ -18,6 +20,7 @@ import com.zettamine.mi.entities.MaterialInspectionCharacteristics;
 import com.zettamine.mi.entities.Plant;
 import com.zettamine.mi.entities.User;
 import com.zettamine.mi.entities.Vendor;
+import com.zettamine.mi.helper.Transformers;
 import com.zettamine.mi.repositories.InspectionActualsRepository;
 import com.zettamine.mi.repositories.InspectionLotRepository;
 import com.zettamine.mi.repositories.UserRepository;
@@ -25,16 +28,21 @@ import com.zettamine.mi.requestdtos.DateRangeLotSearch;
 import com.zettamine.mi.requestdtos.EditLotDto;
 import com.zettamine.mi.requestdtos.LotActualDto;
 import com.zettamine.mi.requestdtos.LotCreationDto;
-import com.zettamine.mi.responsedtos.DateRangeLotResponse;
-import com.zettamine.mi.responsedtos.LotActualsAndCharacteristics;
+import com.zettamine.mi.responsedtos.DateRangeLotResponseDto;
+import com.zettamine.mi.responsedtos.LotActualsAndCharacteristicsResponseDto;
 import com.zettamine.mi.services.InspectionService;
 import com.zettamine.mi.services.MaterialService;
 import com.zettamine.mi.services.PlantService;
 import com.zettamine.mi.services.VendorService;
+import com.zettamine.mi.utils.ApplicationConstants;
 import com.zettamine.mi.utils.StringUtil;
 
 @Service
 public class InspectionServiceImpl implements InspectionService {
+
+	@Value("${date-range}")
+	private long DATE_RANGE;
+
 	private InspectionLotRepository inspectionLotRepo;
 
 	private InspectionActualsRepository inspectionActRepo;
@@ -81,7 +89,7 @@ public class InspectionServiceImpl implements InspectionService {
 	}
 
 	@Override
-	public List<LotActualsAndCharacteristics> getActualAndOriginalOfLot(Integer id) {
+	public List<LotActualsAndCharacteristicsResponseDto> getActualAndOriginalOfLot(Integer id) {
 
 		InspectionLot lot = getLotDetails(id);
 
@@ -93,11 +101,11 @@ public class InspectionServiceImpl implements InspectionService {
 
 		List<InspectionActuals> actuals = lot.getInspectionActuals();
 
-		List<LotActualsAndCharacteristics> list = new LinkedList<>();
+		List<LotActualsAndCharacteristicsResponseDto> list = new LinkedList<>();
 
 		for (int start = 0; start < characteristics.size(); start++) {
 
-			LotActualsAndCharacteristics lotActOrg = LotActualsAndCharacteristics.builder()
+			LotActualsAndCharacteristicsResponseDto lotActOrg = LotActualsAndCharacteristicsResponseDto.builder()
 
 					.lotId(id)
 
@@ -165,7 +173,7 @@ public class InspectionServiceImpl implements InspectionService {
 	public boolean saveInspActuals(LotActualDto actualsDto) {
 
 		InspectionLot lot = getLotDetails(actualsDto.getLot());
-		
+
 		List<MaterialInspectionCharacteristics> totalReqChar = lot.getMaterial().getMaterialChar();
 		List<InspectionActuals> actualChar = lot.getInspectionActuals();
 
@@ -185,12 +193,12 @@ public class InspectionServiceImpl implements InspectionService {
 			}
 
 			lot.getInspectionActuals().add(actuals);
-		}else {
+		} else {
 			optActuals.setMaximumMeasurement(actualsDto.getMaxMeas());
 			optActuals.setMinimumMeasurement(actualsDto.getMinMeas());
 			lot.getInspectionActuals().add(optActuals);
 		}
-		
+
 		inspectionLotRepo.save(lot);
 
 		LOG.info("new inpsection actuals saving for lot id : {}", actualsDto.getLot());
@@ -237,13 +245,13 @@ public class InspectionServiceImpl implements InspectionService {
 			}
 			if (result == false) {
 
-				lot.setResult("MARKED FOR APPROVAL");
+				lot.setResult(ApplicationConstants.LOT_PASS_STATUS);
 
 				LOG.info("lot marked for approvel of id : {}", lot.getLotId());
 
 				inspectionLotRepo.save(lot);
 			} else {
-				lot.setResult("INSP");
+				lot.setResult(ApplicationConstants.LOT_INSPECTION_STATUS);
 				inspectionLotRepo.save(lot);
 			}
 		}
@@ -252,7 +260,13 @@ public class InspectionServiceImpl implements InspectionService {
 	}
 
 	@Override
-	public List<DateRangeLotResponse> getAllLotsDetailsBetweenDateRange(DateRangeLotSearch obj) {
+	public List<DateRangeLotResponseDto> getAllLotsDetailsBetweenDateRange(DateRangeLotSearch obj) {
+
+		boolean isValidDateRange = validateSearchDateRange(obj.getFromDate(), obj.getToDate());
+		
+		if(isValidDateRange == false) {
+			throw new RuntimeException("Invalid date range for searching lots, Period should be : "+DATE_RANGE+" days range");
+		}
 
 		List<InspectionLot> inspList = inspectionLotRepo.findAllBycreationDateBetween(obj.getFromDate(),
 				obj.getToDate());
@@ -293,20 +307,21 @@ public class InspectionServiceImpl implements InspectionService {
 
 		List<InspectionLot> requiredList = inspList.stream().filter(searchCriteria).collect(Collectors.toList());
 
-		List<DateRangeLotResponse> responseList = new LinkedList<>();
-
-		for (InspectionLot lot : requiredList) {
-
-			DateRangeLotResponse respLot = DateRangeLotResponse.builder().createdOn(lot.getCreationDate())
-					.endOn(lot.getInspectionEndDate()).startOn(lot.getInspectionStartDate()).result(lot.getResult())
-					.inspectedBy(lot.getUser() != null ? lot.getUser().getUsername() : null)
-					.material(lot.getMaterial().getMaterialDesc()).lotId(lot.getLotId()).build();
-
-			responseList.add(respLot);
-		}
+		List<DateRangeLotResponseDto> responseList = Transformers.ConvertInspectionLotListToDateRangeResponseDto(requiredList);
 
 		LOG.info("Returing lots meets filter criteria of size : {}", responseList.size());
 		return responseList;
+	}
+
+	private boolean validateSearchDateRange(LocalDate fromDate, LocalDate toDate) {
+		long days = ChronoUnit.DAYS.between(fromDate, toDate);
+		long requiredDays = DATE_RANGE;
+		
+		if (days > requiredDays) {
+			return false;
+		}
+		
+		return true;
 	}
 
 	@Override
@@ -343,8 +358,7 @@ public class InspectionServiceImpl implements InspectionService {
 		boolean isValidDates = validateStDateAndCrDate(lotDto.getStDt(), lotDto.getCrDt());
 
 		if (isValidDates == false) {
-//			throw new RuntimeException("Invalid Start Date or Create Date");
-			return false;
+			throw new RuntimeException("Invalid Start Date or Create Date");
 		}
 
 		Material material = materialService.getMaterial(StringUtil.removeAllSpaces(lotDto.getMatId()));
@@ -355,7 +369,7 @@ public class InspectionServiceImpl implements InspectionService {
 			return false;
 		}
 
-		InspectionLot lot = InspectionLot.builder().result("INSP").creationDate(lotDto.getCrDt())
+		InspectionLot lot = InspectionLot.builder().result(ApplicationConstants.LOT_INSPECTION_STATUS).creationDate(lotDto.getCrDt())
 				.inspectionStartDate(lotDto.getStDt()).material(material).plant(plant).vendor(vendor).build();
 
 		InspectionLot savedLot = inspectionLotRepo.save(lot);
@@ -406,7 +420,5 @@ public class InspectionServiceImpl implements InspectionService {
 
 		return materialList;
 	}
-
-	
 
 }

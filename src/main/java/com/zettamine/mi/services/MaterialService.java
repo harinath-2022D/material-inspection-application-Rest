@@ -2,6 +2,8 @@ package com.zettamine.mi.services;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.zettamine.mi.entities.InspectionLot;
 import com.zettamine.mi.entities.Material;
 import com.zettamine.mi.entities.MaterialInspectionCharacteristics;
@@ -22,7 +24,7 @@ public interface MaterialService {
 
 	List<InspectionLot> getAllInspectionLots();
 	
-	List<MaterialInspectionCharacteristics> getMaterialCharByLotId(String id);
+	List<MaterialInspectionCharacteristics> getMaterialCharByLotId(Integer id);
 //
 //	boolean createInspectionLot(InspectionLot lot);
 //
@@ -39,5 +41,7 @@ public interface MaterialService {
 	boolean saveEditMaterial(Material material);
 
 	List<Material> getAllActiveMaterials();
+	
+	boolean addListOfCharacteristicsForMaterial(MultipartFile file) throws Exception;
 
 }

@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class DateRangeLotResponse {
+public class DateRangeLotResponseDto {
 	
 	private int lotId;
 	

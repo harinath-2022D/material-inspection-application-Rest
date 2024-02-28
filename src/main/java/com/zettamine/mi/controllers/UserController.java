@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.zettamine.mi.entities.User;
+import com.zettamine.mi.requestdtos.NewUser;
 import com.zettamine.mi.services.UserService;
 
 import jakarta.validation.Valid;
@@ -27,7 +27,7 @@ public class UserController {
 	private UserService userService;
 
 	@PostMapping("/save")
-	public ResponseEntity<?> saveNewUser( @RequestBody @Valid User user) {
+	public ResponseEntity<?> saveNewUser( @RequestBody @Valid NewUser user) {
 
 		boolean isUserSaved = userService.saveUser(user);
 		if (isUserSaved) {

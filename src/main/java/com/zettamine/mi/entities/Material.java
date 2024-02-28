@@ -34,6 +34,7 @@ public class Material {
 	
 	private boolean status = true;
 	
+	@JsonIgnore
 	@OneToMany(mappedBy = "material", cascade = CascadeType.ALL)
 	private List<MaterialInspectionCharacteristics> materialChar = new ArrayList<>();
 	

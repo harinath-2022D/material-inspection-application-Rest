@@ -22,8 +22,8 @@
 			</Pattern>
 		</encoder>
 		
-<!--  	used for maintaining log files based on number means if log files reaches maximum 
-old one will be deleted and remaining files are adjusted with appropriate log file number	
+<!--  	used for maintaining log files based on number means if log files reaches maximum, 
+        old one will be deleted and remaining files are adjusted with appropriate log file number	
  
 	  	<rollingPolicy
 			class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class LotActualsAndCharacteristics {
+public class LotActualsAndCharacteristicsResponseDto {
 	private int lotId;
 	private int sNo;
 	private int characteristicId;

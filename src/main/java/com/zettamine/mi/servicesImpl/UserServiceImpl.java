@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 
 import com.zettamine.mi.entities.User;
 import com.zettamine.mi.repositories.UserRepository;
+import com.zettamine.mi.requestdtos.NewUser;
 import com.zettamine.mi.services.UserService;
+import com.zettamine.mi.utils.StringUtil;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -20,8 +22,15 @@ public class UserServiceImpl implements UserService{
 	private UserRepository userRepo;
 	
 	@Override
-	public boolean saveUser(User user) {
-		userRepo.save(user);
+	public boolean saveUser(NewUser user) {
+		User user1 = User.builder()
+				.username(StringUtil.removeAllSpaces(user.getUsername()))
+				.password(user.getPassword())
+				.email(user.getEmail())
+				.mobileNum(StringUtil.removeAllSpaces(user.getMobileNum()))
+				.build();
+		
+		userRepo.save(user1);
 		LOGGER.info("new User Saved to DB");
 		return true;
 	}

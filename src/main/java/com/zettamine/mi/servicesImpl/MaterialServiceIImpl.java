@@ -1,17 +1,26 @@
 package com.zettamine.mi.servicesImpl;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.zettamine.mi.entities.InspectionLot;
 import com.zettamine.mi.entities.Material;
 import com.zettamine.mi.entities.MaterialInspectionCharacteristics;
+import com.zettamine.mi.helper.Transformers;
 import com.zettamine.mi.repositories.InspectionLotRepository;
 import com.zettamine.mi.repositories.MaterialCharRepository;
 import com.zettamine.mi.repositories.MaterialRepository;
@@ -132,31 +141,13 @@ public class MaterialServiceIImpl implements MaterialService {
 	@Override
 	public boolean addNewMaterialCharacteristic(MaterialCharDto matChar) {
 
-		if (Double.valueOf(matChar.getLtl()) > Double.valueOf(matChar.getUtl())) {
+		Material material = isCharacteristicConditionSatisfy(matChar);
+
+		if (material == null) {
 			return false;
 		}
 		
-		Material material = getMaterial(matChar.getMatId());
-		
-		if(material == null) {
-			return false;
-		}
-
-		for (MaterialInspectionCharacteristics matCharItem : material.getMaterialChar()) {
-
-			if (StringUtil.removeExtraSpaces(matCharItem.getCharacteristicDescription()).toUpperCase().equals(matChar.getCharDesc().toUpperCase())) {
-				return false;
-			}
-
-		}
-
-		MaterialInspectionCharacteristics matCharObj = new MaterialInspectionCharacteristics();
-		
-		matCharObj.setCharacteristicDescription(StringUtil.removeExtraSpaces(matChar.getCharDesc()).toUpperCase());
-		matCharObj.setUnitOfMeasure(StringUtil.removeAllSpaces(matChar.getUom()));
-		matCharObj.setLowerToleranceLimit(matChar.getLtl());
-		matCharObj.setUpperToleranceLimit(matChar.getUtl());
-		matCharObj.setMaterial(material);
+		MaterialInspectionCharacteristics matCharObj = Transformers.convertMaterialCharDtoToMaterialInspectionCharObj(matChar, material);
 
 		LOG.info("new Material characteristic adding {}", matChar);
 
@@ -168,6 +159,30 @@ public class MaterialServiceIImpl implements MaterialService {
 		}
 
 		return false;
+	}
+
+	private Material isCharacteristicConditionSatisfy(MaterialCharDto matChar) {
+
+		Material material = getMaterial(matChar.getMatId());
+
+		if (material == null) {
+			return null;
+		}
+
+		if (Double.valueOf(matChar.getLtl()) > Double.valueOf(matChar.getUtl())) {
+			return null;
+		}
+
+		for (MaterialInspectionCharacteristics matCharItem : material.getMaterialChar()) {
+
+			if (StringUtil.removeExtraSpaces(matCharItem.getCharacteristicDescription()).toUpperCase()
+					.equals(matChar.getCharDesc().toUpperCase())) {
+				return null;
+			}
+
+		}
+
+		return material;
 	}
 
 	@Override
@@ -196,7 +211,7 @@ public class MaterialServiceIImpl implements MaterialService {
 	}
 
 	@Override
-	public List<MaterialInspectionCharacteristics> getMaterialCharByLotId(String id) {
+	public List<MaterialInspectionCharacteristics> getMaterialCharByLotId(Integer id) {
 
 		Optional<InspectionLot> optLot = inspectionLotRepo.findById(id);
 
@@ -244,10 +259,10 @@ public class MaterialServiceIImpl implements MaterialService {
 
 	@Override
 	public boolean saveEditMaterial(Material material) {
-		
+
 		Material optMaterial = getMaterial(StringUtil.removeAllSpaces(material.getMaterialId()).toUpperCase());
-		
-		if(optMaterial == null) {
+
+		if (optMaterial == null) {
 			return false;
 		}
 
@@ -274,5 +289,58 @@ public class MaterialServiceIImpl implements MaterialService {
 		return materialList;
 	}
 
+	@SuppressWarnings("resource")
+	@Transactional(rollbackFor = Exception.class)
+	@Override
+	public boolean addListOfCharacteristicsForMaterial(MultipartFile file) throws Exception {
+
+		String fileExtension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+
+		ArrayList<String> list = new ArrayList<>();
+		list.add("xls");
+		list.add("xlsx");
+		list.add("csv");
+
+		if (!list.contains(fileExtension)) {
+			throw new Exception("please provide .xls or .xlsx or .csv file");
+		}
+
+		try {
+			XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
+			XSSFSheet sheet_0 = workbook.getSheetAt(0);
+
+			for (int row = 1; row < sheet_0.getPhysicalNumberOfRows(); row++) {
+				XSSFRow currRow = sheet_0.getRow(row);
+
+				String materialId = currRow.getCell(0).getStringCellValue();
+				String charDesc = currRow.getCell(1).getStringCellValue();
+				double utl = currRow.getCell(2).getNumericCellValue();
+				double ltl = currRow.getCell(3).getNumericCellValue();
+				String uom = currRow.getCell(4).getStringCellValue();
+
+				MaterialCharDto materialCharDto = MaterialCharDto.builder()
+						.matId(materialId)
+						.charDesc(charDesc)
+						.uom(uom)
+						.utl(utl)
+						.ltl(ltl)
+						.build();
+				
+				Material material = isCharacteristicConditionSatisfy(materialCharDto);
+				if(material == null) {
+					LOG.warn("material characteristic {} is already available or materila is not available with id of {}", charDesc, materialId);
+					throw new Exception("material characteristic is already available or materila is not available with id of : " + materialId);
+				}else {
+					MaterialInspectionCharacteristics matChar = Transformers.convertMaterialCharDtoToMaterialInspectionCharObj(materialCharDto, material);
+					material.getMaterialChar().add(matChar);
+					materialRepository.save(material);
+					LOG.info("new material characteristic {} saved for material id : {}", charDesc, materialId);
+				}
+			}
+		} catch (IOException e) {
+			LOG.warn("unable to read uploaded document");
+		}
+		return true;
+	}
 
 }

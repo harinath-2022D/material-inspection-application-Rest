@@ -10,19 +10,19 @@ import com.zettamine.mi.requestdtos.DateRangeLotSearch;
 import com.zettamine.mi.requestdtos.EditLotDto;
 import com.zettamine.mi.requestdtos.LotActualDto;
 import com.zettamine.mi.requestdtos.LotCreationDto;
-import com.zettamine.mi.responsedtos.DateRangeLotResponse;
-import com.zettamine.mi.responsedtos.LotActualsAndCharacteristics;
+import com.zettamine.mi.responsedtos.DateRangeLotResponseDto;
+import com.zettamine.mi.responsedtos.LotActualsAndCharacteristicsResponseDto;
 
 public interface InspectionService {
 	InspectionLot getLotDetails(Integer lot);
 	
-	List<LotActualsAndCharacteristics> getActualAndOriginalOfLot(Integer id);
+	List<LotActualsAndCharacteristicsResponseDto> getActualAndOriginalOfLot(Integer id);
 	
 	List<InspectionLot> getAllInspectionLots();
 	
 	boolean saveInspActuals(LotActualDto actuals);
 	
-	List<DateRangeLotResponse> getAllLotsDetailsBetweenDateRange(DateRangeLotSearch obj);
+	List<DateRangeLotResponseDto> getAllLotsDetailsBetweenDateRange(DateRangeLotSearch obj);
 	
 	boolean updateInspectionLot(EditLotDto lot);
 	
