@@ -87,21 +87,21 @@ class MaterialControllerTest {
 		
 //		jsonObject.put("message", "resource not found");
 		
-		jsonObject.put(writeValueAsString, true);
+//		jsonObject.put(writeValueAsString, true);
 		System.out.println(jsonObject.toString());
 		System.out.println(jsonObject.getString("key"));
 		
-//		MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-//		.get("/material/{id}", matId)
-//		.contentType(MediaType.APPLICATION_JSON))
-//        .andExpect(status().isNotFound())
-////        .andExpect(MockMvcResultMatchers.jsonPath("$", is(jsonObject.toString())))
-//        .andReturn();
-//		
-//		String actual = result.getResponse().getContentAsString();
-//		System.out.println(actual);
-//		
-//		assertEquals(jsonObject.toString(), actual);
+		MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+		.get("/material/{id}", matId)
+		.contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+//        .andExpect(MockMvcResultMatchers.jsonPath("$", is(jsonObject.toString())))
+        .andReturn();
+		
+		String actual = result.getResponse().getContentAsString();
+		System.out.println(actual);
+		
+		assertEquals(jsonObject.toString(), actual);
 		
 	}
 

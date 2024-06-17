@@ -2,7 +2,8 @@ spring:
   application:
     name: material-inspection-service
   datasource:
-    url: jdbc:mysql://localhost:3306/materialMasterServiceDb?createTableIfNotExists=true
+#    url: jdbc:mysql://localhost:3306/materialMasterServiceDb?createTableIfNotExists=true
+    url: jdbc:mysql://localhost:3306/mapDb?createTableIfNotExists=true
     username: root
     password: 3306
   jpa:
