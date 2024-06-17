@@ -2,9 +2,9 @@ package com.zettamine.mi.utils;
 
 public class StringUtil {
 
-	private static String EXTRA_SPACE = "\\s+";
-	private static String SINGLE_SPACE = " ";
-	private static String EMPTY = "";
+	private final static String EXTRA_SPACE = "\\s+";
+	private final static String SINGLE_SPACE = " ";
+	private final static String EMPTY = "";
 
 	public static String removeExtraSpaces(String str) {
 

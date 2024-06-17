@@ -146,8 +146,9 @@ public class MaterialServiceIImpl implements MaterialService {
 		if (material == null) {
 			return false;
 		}
-		
-		MaterialInspectionCharacteristics matCharObj = Transformers.convertMaterialCharDtoToMaterialInspectionCharObj(matChar, material);
+
+		MaterialInspectionCharacteristics matCharObj = Transformers
+				.convertMaterialCharDtoToMaterialInspectionCharObj(matChar, material);
 
 		LOG.info("new Material characteristic adding {}", matChar);
 
@@ -318,20 +319,20 @@ public class MaterialServiceIImpl implements MaterialService {
 				double ltl = currRow.getCell(3).getNumericCellValue();
 				String uom = currRow.getCell(4).getStringCellValue();
 
-				MaterialCharDto materialCharDto = MaterialCharDto.builder()
-						.matId(materialId)
-						.charDesc(charDesc)
-						.uom(uom)
-						.utl(utl)
-						.ltl(ltl)
-						.build();
-				
+				MaterialCharDto materialCharDto = MaterialCharDto.builder().matId(materialId).charDesc(charDesc)
+						.uom(uom).utl(utl).ltl(ltl).build();
+
 				Material material = isCharacteristicConditionSatisfy(materialCharDto);
-				if(material == null) {
-					LOG.warn("material characteristic {} is already available or materila is not available with id of {}", charDesc, materialId);
-					throw new Exception("material characteristic is already available or materila is not available with id of : " + materialId);
-				}else {
-					MaterialInspectionCharacteristics matChar = Transformers.convertMaterialCharDtoToMaterialInspectionCharObj(materialCharDto, material);
+				if (material == null) {
+					LOG.warn(
+							"material characteristic {} is already available or materila is not available with id of {}",
+							charDesc, materialId);
+					throw new Exception(
+							"material characteristic is already available or materila is not available with id of : "
+									+ materialId);
+				} else {
+					MaterialInspectionCharacteristics matChar = Transformers
+							.convertMaterialCharDtoToMaterialInspectionCharObj(materialCharDto, material);
 					material.getMaterialChar().add(matChar);
 					materialRepository.save(material);
 					LOG.info("new material characteristic {} saved for material id : {}", charDesc, materialId);
