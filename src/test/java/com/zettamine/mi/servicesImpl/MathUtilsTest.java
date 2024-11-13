@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.util.Arrays;
 import java.util.List;
@@ -80,7 +82,7 @@ class MathUtilsTest {
 			actual = obj.getListOfEvenIntegers(list);
 			assertEquals(expected, actual, "Expecting only even numbers");
 			
-		} catch (InvalidElementException e) {
+		} catch (Exception e) {
 			
 			assertTrue(e instanceof InvalidElementException);
 		}
@@ -154,9 +156,19 @@ class MathUtilsTest {
 			int actual = obj.add(2, 1);
 			assertEquals(expected, actual, () -> "should return sum " + expected+ " but actual is " + actual);
 		}
+		
+		
+		
 	}
 	
-
+	
+	@Test
+	void testBookTicketReturnTypeIsVoid() {
+		MathUtils math = mock(MathUtils.class);
+		
+		math.bookTicket(2);
+		verify(math).bookTicket(2);
+	}
 	
 	
 	

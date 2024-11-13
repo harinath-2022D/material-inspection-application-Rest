@@ -31,5 +31,9 @@ public class MaterialInspectionRestApplication {
 		
 		
 	}
+	
+	static {
+		int  abc = 10;
+	}
 
 }

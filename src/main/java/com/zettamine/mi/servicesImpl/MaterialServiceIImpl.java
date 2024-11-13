@@ -74,7 +74,7 @@ public class MaterialServiceIImpl implements MaterialService {
 			LOG.info("no material associated with id : {}", id);
 
 			return null;
-		}
+		} 
 
 		LOG.info("returing material with id : {}", id);
 
@@ -319,8 +319,12 @@ public class MaterialServiceIImpl implements MaterialService {
 				double ltl = currRow.getCell(3).getNumericCellValue();
 				String uom = currRow.getCell(4).getStringCellValue();
 
-				MaterialCharDto materialCharDto = MaterialCharDto.builder().matId(materialId).charDesc(charDesc)
-						.uom(uom).utl(utl).ltl(ltl).build();
+				MaterialCharDto materialCharDto = MaterialCharDto.builder()
+					                                           	.matId(materialId)
+						.charDesc(charDesc)
+						.uom(uom).utl(utl)
+						.ltl(ltl)
+						.build();
 
 				Material material = isCharacteristicConditionSatisfy(materialCharDto);
 				if (material == null) {
